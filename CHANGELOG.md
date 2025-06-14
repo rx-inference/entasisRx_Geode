@@ -8,6 +8,10 @@ this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 2025-06-14
 
+### v0.2.0
+
+- add: feature: columns can be resized. ;;;
+
 ### v0.1.0
 
 - add: prototype app 'entasisRxGeode.html'. ;;;
