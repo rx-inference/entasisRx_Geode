@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>entasisRx_Geode</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: 'Rubik', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    #container {
+      width: 100%;
+      outline: 1px solid #000;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 0 8px;
+      text-align: left;
+      height: 36px;
+      box-sizing: border-box;
+      vertical-align: middle;
+    }
+    #input-row td {
+      padding: 0;
+      vertical-align: middle;
+    }
+    button {
+      background-color: #000;
+      color: #fff;
+      border: none;
+      padding: 4px 16px;
+      cursor: pointer;
+      margin-right: 5px;
+      font-family: 'Rubik', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-size: 1rem;
+      min-height: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button:hover {
+      opacity: 0.8;
+    }
+    .dropdown {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+    .dropdown-content {
+      display: none;
+      position: absolute;
+      background-color: #fff;
+      min-width: 180px;
+      box-shadow: 0 0 5px rgba(0,0,0,0.2);
+      z-index: 100;
+    }
+    .dropdown-content div {
+      padding: 8px 12px;
+      cursor: pointer;
+      color: #000;
+    }
+    .dropdown-content div:hover {
+      background-color: #000;
+      color: #fff;
+    }
+    .dropdown:hover .dropdown-content {
+      display: block;
+    }
+    input[type="text"], input[type="number"], input[type="datetime-local"], select {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      border: none;
+      outline: none;
+      padding: 0 8px;
+      margin: 0;
+      font-family: inherit;
+      font-size: inherit;
+      background: transparent;
+      vertical-align: middle;
+    }
+    .action-btn {
+      width: 30px;
+      height: 30px;
+      padding: 4px 8px;
+    }
+    .editable-cell {
+      cursor: pointer;
+    }
+    .editable-cell:hover {
+      background-color: #f5f5f5;
+    }
+    .cell-editing {
+      padding: 0 !important;
+    }
+    .priority-slider-wrapper {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        padding: 0 8px; /* Consistent internal padding for the wrapper */
+        box-sizing: border-box;
+    }
+    input[type="range"].priority-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        height: 8px;
+        background: #e0e0e0;
+        border-radius: 5px;
+        outline: none;
+        cursor: pointer;
+        --thumb-color: #888888;
+        --track-active-color: #666666;
+        --value-percent: 0%;
+        vertical-align: middle;
+        flex-grow: 1;
+        margin-right: 8px;
+    }
+    input[type="range"].priority-slider::-webkit-slider-runnable-track {
+        width: 100%; height: 8px; cursor: pointer;
+        background: linear-gradient(to right, var(--track-active-color) 0%, var(--track-active-color) var(--value-percent), #e0e0e0 var(--value-percent), #e0e0e0 100%);
+        border-radius: 5px;
+    }
+    input[type="range"].priority-slider::-webkit-slider-thumb {
+        -webkit-appearance: none; appearance: none; border: none;
+        height: 18px; width: 18px; border-radius: 50%;
+        background: var(--thumb-color); cursor: pointer;
+        margin-top: -5px; box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+    input[type="range"].priority-slider::-moz-range-track {
+        width: 100%; height: 8px; cursor: pointer;
+        background: linear-gradient(to right, var(--track-active-color) 0%, var(--track-active-color) var(--value-percent), #e0e0e0 var(--value-percent), #e0e0e0 100%);
+        border-radius: 5px; border: none;
+    }
+    input[type="range"].priority-slider::-moz-range-thumb {
+        border: none; height: 18px; width: 18px; border-radius: 50%;
+        background: var(--thumb-color); cursor: pointer; box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+    input[type="range"].priority-slider::-ms-track {
+        width: 100%; height: 8px; cursor: pointer;
+        background: transparent; border-color: transparent; color: transparent;
+    }
+    input[type="range"].priority-slider::-ms-fill-lower { background: var(--track-active-color); border-radius: 5px; }
+    input[type="range"].priority-slider::-ms-fill-upper { background: #e0e0e0; border-radius: 5px; }
+    input[type="range"].priority-slider::-ms-thumb {
+        border: none; height: 18px; width: 18px; border-radius: 50%;
+        background: var(--thumb-color); cursor: pointer; margin-top: 0px;
+        box-shadow: 0 0 3px rgba(0,0,0,0.3);
+    }
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(0,0,0,0.4);
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-content {
+        background:#fff;
+        border-radius:0;
+        border:1px solid #000;
+        box-shadow:0 0 10px rgba(0,0,0,0.2);
+        padding:32px 24px;
+        max-width:350px;
+        margin:auto;
+        font-family:'Rubik',sans-serif;
+    }
+    .modal-content h3 {
+        margin-top:0;
+    }
+    .modal-buttons {
+        display:flex;
+        gap:10px;
+        margin-top:20px;
+        justify-content: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div class="dropdown">
+      <button>DATABASE</button>
+      <div class="dropdown-content">
+        <div id="new-db">NEW</div>
+        <div id="load-db">LOAD</div>
+        <div id="export-db">BACKUP</div>
+      </div>
+    </div>
+    <div style="float:right; margin-bottom:10px;">
+      <label style="font-size:0.95rem; user-select:none; cursor:pointer; display:inline-flex; align-items:center;">
+        <input type="checkbox" id="hide-done-checkbox" style="vertical-align:middle; margin-right:4px;" /> HIDE DONE
+      </label>
+    </div>
+    <input type="file" id="db-file" accept=".sqlite,.db" style="display:none;" />
+
+    <table id="tasks-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>TASK</th>
+          <th>PRIO</th>
+          <th>DATE MODIFIED</th>
+          <th>DATE DONE</th>
+          <th>DATE DUE</th>
+          <th>DATE CREATED</th>
+          <th>STATE</th>
+          <th>ACTIONS</th>
+        </tr>
+        <tr id="input-row">
+          <td></td> <td><input type="text" id="aufgabe" required placeholder="New task description" /></td>
+          <td class="priority-input-cell">
+            <div class="priority-slider-wrapper">
+              <input type="range" id="new_task_prio_slider" class="priority-slider" min="0" max="1000" value="0">
+              <span id="new_task_prio_value" style="width: 35px; text-align: right; font-family: inherit; font-size: inherit;">0</span>
+            </div>
+            <input type="hidden" id="prio" value="0">
+          </td>
+          <td></td> <td></td> <td><input type="datetime-local" id="datum_ziel" placeholder="Due date" /></td>
+          <td></td> <td>
+            <select id="state" required>
+              <option value="open">open</option>
+              <option value="passive">passive</option>
+              <option value="in progress">in progress</option>
+              <option value="ongoing">ongoing</option>
+              <option value="done">done</option>
+              <option value="cancelled">cancelled</option>
+            </select>
+          </td>
+          <td><button id="add-task-btn" style="width:100%; height:100%;">ADD</button></td> </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div id="migration-modal" class="modal"> <div class="modal-content">
+      <h3>Schema Migration Needed</h3>
+      <p>Your database is missing the <b>state</b> field.<br>What do you want to do?</p>
+      <div class="modal-buttons"> <button id="modal-backup-migrate">Backup then Migrate</button>
+        <button id="modal-migrate">Migrate Only</button>
+        <button id="modal-cancel-migrate">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="confirmation-modal" class="modal"> <div class="modal-content">
+      <h3 id="confirmation-title">Confirm Action</h3>
+      <p id="confirmation-message">Are you sure?</p>
+      <div class="modal-buttons"> <button id="confirm-yes-btn">Yes</button>
+        <button id="confirm-no-btn">No</button>
+        <button id="confirm-extra-btn" style="display:none;">Option</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let db;
+    let SQL;
+    let hasChanges = false;
+    let currentOnConfirm = null;
+    let currentOnCancel = null;
+    let currentOnExtra = null;
+
+    function hexToRgb(hex) {
+        let r = 0, g = 0, b = 0;
+        if (hex.length === 4) { r = parseInt(hex[1] + hex[1], 16); g = parseInt(hex[2] + hex[2], 16); b = parseInt(hex[3] + hex[3], 16);
+        } else if (hex.length === 7) { r = parseInt(hex[1] + hex[2], 16); g = parseInt(hex[3] + hex[4], 16); b = parseInt(hex[5] + hex[6], 16); }
+        return [r, g, b];
+    }
+    function rgbToHex(r, g, b) {
+        return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
+    }
+    const priorityColorStops = [
+        { p: 0,    colorHex: "#50808E" }, { p: 0.25, colorHex: "#A4EC98" }, { p: 0.375,colorHex: "#D2FF96" },
+        { p: 0.48, colorHex: "#EDFF7A" }, { p: 0.625,colorHex: "#FFDA5A" }, { p: 0.80, colorHex: "#FFB464" },
+        { p: 1.0,  colorHex: "#ED254E" }
+    ].map(stop => ({ p: stop.p, color: hexToRgb(stop.colorHex) }));
+
+    function getInterpolatedColor(value, maxValue) {
+        const percentage = Math.min(Math.max(value / maxValue, 0), 1);
+        let lowerStop = priorityColorStops[0], upperStop = priorityColorStops[priorityColorStops.length - 1];
+        for (let i = 0; i < priorityColorStops.length - 1; i++) {
+            if (percentage >= priorityColorStops[i].p && percentage <= priorityColorStops[i+1].p) {
+                lowerStop = priorityColorStops[i]; upperStop = priorityColorStops[i+1]; break;
+            }
+        }
+        if (upperStop.p === lowerStop.p) return rgbToHex(lowerStop.color[0], lowerStop.color[1], lowerStop.color[2]);
+        const rangePct = (percentage - lowerStop.p) / (upperStop.p - lowerStop.p);
+        const r = Math.round(lowerStop.color[0] + (upperStop.color[0] - lowerStop.color[0]) * rangePct);
+        const g = Math.round(lowerStop.color[1] + (upperStop.color[1] - lowerStop.color[1]) * rangePct);
+        const b = Math.round(lowerStop.color[2] + (upperStop.color[2] - lowerStop.color[2]) * rangePct);
+        return rgbToHex(r, g, b);
+    }
+    function updateSliderAppearance(sliderElement) {
+        if (!sliderElement) return;
+        const value = parseFloat(sliderElement.value), max = parseFloat(sliderElement.max);
+        const percentageFill = (value / max) * 100, currentColor = getInterpolatedColor(value, max);
+        sliderElement.style.setProperty('--value-percent', `${percentageFill}%`);
+        sliderElement.style.setProperty('--thumb-color', currentColor);
+        sliderElement.style.setProperty('--track-active-color', currentColor);
+    }
+
+    const confirmationModal = document.getElementById('confirmation-modal');
+    const confirmationTitle = document.getElementById('confirmation-title');
+    const confirmationMessage = document.getElementById('confirmation-message');
+    const confirmYesBtn = document.getElementById('confirm-yes-btn');
+    const confirmNoBtn = document.getElementById('confirm-no-btn');
+    const confirmExtraBtn = document.getElementById('confirm-extra-btn');
+
+    function showConfirmationModal(title, message, onConfirm, onCancel, extraOptions) {
+        confirmationTitle.textContent = title;
+        confirmationMessage.innerHTML = message;
+        currentOnConfirm = onConfirm;
+        currentOnCancel = onCancel || null;
+        currentOnExtra = (extraOptions && extraOptions.onExtra) ? extraOptions.onExtra : null;
+        confirmYesBtn.textContent = (extraOptions && extraOptions.yesText) ? extraOptions.yesText : 'Yes';
+        if (extraOptions && extraOptions.infoMode) {
+            confirmNoBtn.style.display = 'none';
+            confirmExtraBtn.style.display = 'none';
+            confirmYesBtn.textContent = (extraOptions && extraOptions.yesText) ? extraOptions.yesText : 'OK';
+        } else {
+            confirmNoBtn.style.display = 'inline-flex';
+            confirmNoBtn.textContent = (extraOptions && extraOptions.noText) ? extraOptions.noText : 'No';
+            if (extraOptions && extraOptions.extraText && currentOnExtra) {
+                confirmExtraBtn.textContent = extraOptions.extraText;
+                confirmExtraBtn.style.display = 'inline-flex';
+            } else {
+                confirmExtraBtn.style.display = 'none';
+            }
+        }
+        confirmationModal.style.display = 'flex';
+    }
+
+    function closeConfirmationModal() {
+        confirmationModal.style.display = 'none';
+        currentOnConfirm = null; currentOnCancel = null; currentOnExtra = null;
+    }
+
+    confirmYesBtn.onclick = () => { if (currentOnConfirm) currentOnConfirm(); closeConfirmationModal(); };
+    confirmNoBtn.onclick = () => { if (currentOnCancel) currentOnCancel(); closeConfirmationModal(); };
+    confirmExtraBtn.onclick = () => { if (currentOnExtra) currentOnExtra(); closeConfirmationModal(); };
+    window.onclick = function(event) {
+        if (event.target == confirmationModal) {
+            if (currentOnCancel && confirmNoBtn.style.display !== 'none') currentOnCancel();
+            closeConfirmationModal();
+        }
+        if (event.target == migrationModal) { closeMigrationModal(); }
+    }
+
+    window.initSqlJs({ locateFile: file => 'https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/' + file })
+      .then(SQLLib => {
+        SQL = SQLLib; initDatabase(); setupNewTaskPrioritySlider();
+      });
+
+    function initDatabase(buffer) {
+      if (!SQL) return;
+      if (buffer) {
+        try {
+            db = new SQL.Database(new Uint8Array(buffer));
+            const info = db.exec("PRAGMA table_info(tasks);");
+            if (info && info[0] && !info[0].values.map(col => col[1]).includes("state")) {
+                document.getElementById('migration-modal').style.display = 'flex';
+                window._pendingMigrationDB = db;
+                window._pendingMigrationCallback = () => { hasChanges = false; refreshTable(); };
+                return;
+            }
+        } catch (e) {
+            console.error("Error loading database:", e);
+            showConfirmationModal("Load Error", "Could not load the database file. It might be corrupted or not a valid SQLite file. Create new database?",
+                () => { initDatabase(); }, () => {}, { infoMode: false });
+            return;
+        }
+      } else {
+        db = new SQL.Database();
+        db.run(`CREATE TABLE IF NOT EXISTS tasks (id INTEGER PRIMARY KEY AUTOINCREMENT, aufgabe TEXT, prio INTEGER, datum_geaendert TEXT, datum_erledigt TEXT, datum_ziel TEXT, datum_erstellt TEXT, state TEXT DEFAULT 'open');`);
+      }
+      hasChanges = false; refreshTable();
+    }
+
+    function refreshTable() {
+      if (!db) return;
+      const tbody = document.querySelector('#tasks-table tbody');
+      tbody.innerHTML = '';
+      const hideDone = document.getElementById('hide-done-checkbox')?.checked;
+      const res = db.exec('SELECT id, aufgabe, prio, datum_geaendert, datum_erledigt, datum_ziel, datum_erstellt, state FROM tasks ORDER BY prio DESC, datum_geaendert DESC;');
+      if (res && res[0]) {
+        res[0].values.forEach(row => {
+          const [id, aufgabe, prio, datum_geaendert, datum_erledigt, datum_ziel, datum_erstellt, state] = row;
+          if (hideDone && state === 'done') return;
+
+          const tr = document.createElement('tr');
+          let td = document.createElement('td'); td.textContent = id || ''; tr.appendChild(td);
+          td = document.createElement('td'); td.textContent = aufgabe || '';
+          td.setAttribute('data-field', 'aufgabe'); td.setAttribute('data-id', id); td.classList.add('editable-cell'); tr.appendChild(td);
+
+          // PRIO Cell
+          td = document.createElement('td');
+          td.style.padding = '0'; // Ensure consistent padding for slider container cell
+          const wrapper = document.createElement('div'); wrapper.className = 'priority-slider-wrapper';
+          const slider = document.createElement('input'); slider.type = 'range'; slider.classList.add('priority-slider');
+          slider.min = 0; slider.max = 1000; slider.value = prio || 0;
+          const valueSpan = document.createElement('span'); valueSpan.textContent = prio || '0';
+          valueSpan.style.width = '35px'; valueSpan.style.textAlign = 'right'; valueSpan.style.verticalAlign = 'middle';
+          updateSliderAppearance(slider);
+          slider.addEventListener('input', function(e) { valueSpan.textContent = e.target.value; updateSliderAppearance(e.target); });
+          slider.addEventListener('change', function(e) { updateTaskField(id, 'prio', e.target.value); });
+          wrapper.appendChild(slider); wrapper.appendChild(valueSpan); td.appendChild(wrapper);
+          td.setAttribute('data-field', 'prio'); td.setAttribute('data-id', id); td.setAttribute('data-raw', prio || '0');
+          tr.appendChild(td);
+
+          // DATE MODIFIED - Restored seconds display
+          td = document.createElement('td'); td.textContent = (datum_geaendert && datum_geaendert !== 'null') ? new Date(datum_geaendert).toLocaleString('sv-SE').replace('T', ' ').substring(0,19) : ''; tr.appendChild(td);
+          // DATE DONE - Restored seconds display
+          td = document.createElement('td'); td.textContent = (datum_erledigt && datum_erledigt !== 'null') ? new Date(datum_erledigt).toLocaleString('sv-SE').replace('T', ' ').substring(0,19) : ''; tr.appendChild(td);
+          // DATE DUE - Restored seconds display and consistent formatting
+          td = document.createElement('td');
+          td.textContent = (datum_ziel && datum_ziel !== 'null') ? new Date(datum_ziel).toLocaleString('sv-SE').replace('T', ' ').substring(0,19) : '';
+          td.setAttribute('data-field', 'datum_ziel'); td.setAttribute('data-id', id);
+          td.setAttribute('data-raw', (datum_ziel && datum_ziel !== 'null') ? new Date(datum_ziel).toISOString() : '');
+          td.classList.add('editable-cell'); tr.appendChild(td);
+          // DATE CREATED - Restored seconds display
+          td = document.createElement('td'); td.textContent = (datum_erstellt && datum_erstellt !== 'null') ? new Date(datum_erstellt).toLocaleString('sv-SE').replace('T', ' ').substring(0,19) : ''; tr.appendChild(td);
+
+          td = document.createElement('td'); td.textContent = state || '';
+          td.setAttribute('data-field', 'state'); td.setAttribute('data-id', id); td.classList.add('editable-cell'); tr.appendChild(td);
+
+          const actionsTd = document.createElement('td');
+          const doneBtn = document.createElement('button'); doneBtn.className = 'action-btn';
+          doneBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M13.485 1.929a.75.75 0 0 1 1.06 1.06l-8 8a.75.75 0 0 1-1.06 0l-4-4a.75.75 0 1 1 1.06-1.06L6 8.439l7.485-7.51z"/></svg>';
+          doneBtn.title = 'Set as Done';
+          doneBtn.onclick = () => { if (!db) return; const now = new Date().toISOString(); db.run('UPDATE tasks SET state = ?, datum_geaendert = ?, datum_erledigt = ? WHERE id = ?;', ['done', now, now, id]); hasChanges = true; refreshTable(); };
+          const delBtn = document.createElement('button'); delBtn.className = 'action-btn';
+          delBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z"/></svg>';
+          delBtn.title = 'Delete Task';
+          delBtn.onclick = () => deleteTask(id);
+          actionsTd.appendChild(doneBtn); actionsTd.appendChild(delBtn);
+          tr.appendChild(actionsTd);
+          tbody.appendChild(tr);
+        });
+      }
+    }
+
+    function handleInputRowSubmit() {
+      if (!db) return;
+      const aufgabe = document.getElementById('aufgabe').value.trim();
+      const prio = parseInt(document.getElementById('prio').value, 10);
+      const datum_ziel_val = document.getElementById('datum_ziel').value;
+      const datum_ziel = datum_ziel_val ? new Date(datum_ziel_val).toISOString() : null;
+      const state = document.getElementById('state').value;
+      const now = new Date().toISOString();
+      if (!aufgabe) {
+        showConfirmationModal("Input Error", "Task description cannot be empty.", () => {}, null, {infoMode: true});
+        return;
+      }
+      db.run(`INSERT INTO tasks (aufgabe, prio, datum_geaendert, datum_ziel, datum_erstellt, state) VALUES (?, ?, ?, ?, ?, ?);`,
+             [aufgabe, prio, now, datum_ziel, now, state]);
+      hasChanges = true; refreshTable();
+      document.getElementById('aufgabe').value = '';
+      document.getElementById('prio').value = 0;
+      const slider = document.getElementById('new_task_prio_slider');
+      const display = document.getElementById('new_task_prio_value');
+      if (slider) { slider.value = 0; updateSliderAppearance(slider); }
+      if (display) display.textContent = '0';
+      document.getElementById('datum_ziel').value = '';
+      document.getElementById('state').value = 'open';
+      document.getElementById('aufgabe').focus();
+    }
+
+    document.getElementById('add-task-btn').addEventListener('click', handleInputRowSubmit);
+    ['aufgabe','datum_ziel','state', 'new_task_prio_slider'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+          if (id === 'aufgabe' || id === 'new_task_prio_slider' || id === 'state' || id === 'datum_ziel') {
+            e.preventDefault(); handleInputRowSubmit();
+          }
+        }
+      });
+    });
+
+    function deleteTask(id) {
+      if (!db) return;
+      showConfirmationModal("Delete Task", `Are you sure you want to delete task ID ${id}? This action cannot be undone.`,
+        () => { db.run('DELETE FROM tasks WHERE id = ?;', [id]); hasChanges = true; refreshTable(); },
+        null, { infoMode: false });
+    }
+
+    document.getElementById('load-db').onclick = () => document.getElementById('db-file').click();
+    document.getElementById('new-db').onclick = () => {
+      if (hasChanges) {
+        showConfirmationModal("Unsaved Changes", "You have unsaved changes. Are you sure you want to create a new database? All current unsaved data will be lost.",
+          () => { initDatabase(); }, null, { infoMode: false });
+      } else { initDatabase(); }
+    };
+    document.getElementById('export-db').onclick = () => {
+      if (!db) {
+         showConfirmationModal("No Database", "There is no database to export.", () => {}, null, {infoMode: true}); return;
+      }
+      try {
+        const data = db.export(); const blob = new Blob([data], { type: 'application/vnd.sqlite3' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        a.download = `todo_backup_${timestamp}.sqlite`;
+        document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+        hasChanges = false;
+         showConfirmationModal("Export Successful", "Database backed up successfully.", () => {}, null, {infoMode: true});
+      } catch (e) {
+        console.error("Export failed:", e);
+        showConfirmationModal("Export Failed", "Could not export the database.", () => {}, null, {infoMode: true});
+      }
+    };
+
+    document.getElementById('db-file').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (file) {
+        if (hasChanges) {
+          showConfirmationModal("Unsaved Changes", "You have unsaved changes. Load new database and discard current changes?",
+            () => {
+              const reader = new FileReader();
+              reader.onload = () => initDatabase(reader.result);
+              reader.onerror = () => { showConfirmationModal("File Error", "Error reading file.", () => {}, null, {infoMode: true}); }
+              reader.readAsArrayBuffer(file); e.target.value = null;
+            },
+            () => { e.target.value = null; }, { infoMode: false });
+        } else {
+          const reader = new FileReader();
+          reader.onload = () => initDatabase(reader.result);
+          reader.onerror = () => { showConfirmationModal("File Error", "Error reading file.", () => {}, null, {infoMode: true}); }
+          reader.readAsArrayBuffer(file); e.target.value = null;
+        }
+      }
+    });
+
+    const migrationModal = document.getElementById('migration-modal');
+    function closeMigrationModal() {
+        migrationModal.style.display = 'none';
+        window._pendingMigrationDB = null; window._pendingMigrationCallback = null;
+    }
+
+    document.getElementById('modal-backup-migrate').onclick = () => {
+        if (window._pendingMigrationDB) {
+            const data = window._pendingMigrationDB.export(); const blob = new Blob([data], { type: 'application/vnd.sqlite3' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.download = `todo_backup_for_migration_${timestamp}.sqlite`;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(a.href);
+        }
+        document.getElementById('modal-migrate').onclick();
+    };
+    document.getElementById('modal-migrate').onclick = () => {
+      const dbI = window._pendingMigrationDB; if (!dbI) return;
+      try {
+        dbI.run("ALTER TABLE tasks ADD COLUMN state TEXT DEFAULT 'open';");
+        dbI.run("UPDATE tasks SET state = 'open' WHERE state IS NULL;");
+        db = dbI;
+      } catch (e) {
+          console.error("Migration failed:", e);
+          showConfirmationModal("Migration Failed", "Could not migrate the database schema. Please backup your data manually if possible and start with a new database.", ()=>{}, null, {infoMode: true});
+          closeMigrationModal(); return;
+      }
+      closeMigrationModal();
+      if (window._pendingMigrationCallback) window._pendingMigrationCallback();
+      hasChanges = true; refreshTable();
+    };
+    document.getElementById('modal-cancel-migrate').onclick = () => {
+      closeMigrationModal();
+      showConfirmationModal("Migration Cancelled", "Schema migration was cancelled. The loaded database might not work correctly. Create a new database?",
+        () => { initDatabase(); },
+        () => {
+            db = null;
+            document.querySelector('#tasks-table tbody').innerHTML = '<tr><td colspan="9" style="text-align:center;">Please load or create a database.</td></tr>';
+        }, {infoMode: false});
+    };
+
+    document.addEventListener('click', function(e) {
+      const targetIsEditableCell = e.target.classList.contains('editable-cell');
+      const targetIsInsideEditableCell = e.target.closest('.editable-cell');
+      const activeEditingCell = document.querySelector('.cell-editing');
+      if (e.target.closest('.priority-slider-wrapper, .action-btn')) {
+          if (activeEditingCell && !activeEditingCell.contains(e.target) && !e.target.closest('.editable-cell')) {
+             finishEditing(activeEditingCell);
+          }
+          return;
+      }
+      if (targetIsEditableCell || targetIsInsideEditableCell) {
+        const cellToEdit = targetIsEditableCell ? e.target : e.target.closest('.editable-cell');
+        if (cellToEdit && (!activeEditingCell || activeEditingCell !== cellToEdit)) {
+          if (activeEditingCell) finishEditing(activeEditingCell);
+          startEditing(cellToEdit);
+        }
+      } else if (activeEditingCell && !activeEditingCell.contains(e.target) && !e.target.closest('.editable-cell')) {
+        finishEditing(activeEditingCell);
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      const activeEditInput = document.querySelector('.cell-editing input, .cell-editing select');
+      if (!activeEditInput) return;
+      const activeEditingCell = activeEditInput.closest('.cell-editing');
+      if (!activeEditingCell) return;
+      if (e.key === 'Enter') { e.preventDefault(); finishEditing(activeEditingCell); }
+      else if (e.key === 'Escape') { e.preventDefault(); cancelEditing(activeEditingCell); }
+    });
+
+    function startEditing(cell) {
+      const field = cell.getAttribute('data-field'); const id = cell.getAttribute('data-id');
+      let currentValue = (field === 'datum_ziel' || field === 'prio') ? cell.getAttribute('data-raw') : cell.textContent.trim();
+      cell.setAttribute('data-original', cell.textContent.trim());
+      let input;
+      if (field === 'prio') { return; }
+      else if (field === 'datum_ziel') {
+        input = document.createElement('input'); input.type = 'datetime-local';
+        if (currentValue && currentValue !== 'null' && currentValue !== '') {
+            const dateObj = new Date(currentValue);
+            if (!isNaN(dateObj)) {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                const hours = String(dateObj.getHours()).padStart(2, '0');
+                const minutes = String(dateObj.getMinutes()).padStart(2, '0');
+                input.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+            } else { input.value = ''; }
+        } else { input.value = ''; }
+      } else if (field === 'state') {
+        input = document.createElement('select');
+        ['open','passive','in progress','ongoing','done','cancelled'].forEach(o => {
+          const opt=document.createElement('option'); opt.value=o; opt.textContent=o;
+          if(o === currentValue) opt.selected=true; input.appendChild(opt);
+        });
+      } else {
+        input = document.createElement('input'); input.type = 'text'; input.value = currentValue;
+      }
+      input.style.cssText = 'width:100%; height:100%; box-sizing:border-box; border:1px solid #000; outline:none; padding:0 8px; margin:0; font:inherit; background-color: #fff;';
+      input.setAttribute('data-field', field); input.setAttribute('data-id', id);
+      cell.innerHTML = ''; cell.appendChild(input); cell.classList.add('cell-editing');
+      input.focus();
+      if (input.type === 'text') input.setSelectionRange(input.value.length, input.value.length);
+    }
+
+    function finishEditing(cell) {
+      const input = cell.querySelector('input, select');
+      if (!input) {
+          cell.classList.remove('cell-editing');
+          const originalText = cell.getAttribute('data-original');
+          if (originalText !== null) cell.textContent = originalText; else refreshTable();
+          return;
+      }
+      let newValue = input.value; const field = input.getAttribute('data-field');
+      if (field === 'datum_ziel' && newValue) { newValue = new Date(newValue).toISOString(); }
+      updateTaskField(input.getAttribute('data-id'), field, newValue);
+    }
+
+    function cancelEditing(cell) {
+      cell.classList.remove('cell-editing');
+      const originalText = cell.getAttribute('data-original');
+      if (originalText !== null) {
+          const field = cell.getAttribute('data-field');
+          if (field === 'datum_ziel') { // Reformat date for display if it was a date field
+              const rawDate = cell.getAttribute('data-raw');
+              cell.textContent = (rawDate && rawDate !== 'null') ? new Date(rawDate).toLocaleString('sv-SE').replace('T', ' ').substring(0,19) : '';
+          } else {
+              cell.textContent = originalText;
+          }
+      } else { refreshTable(); }
+    }
+
+    function updateTaskField(id, field, value) {
+      if (!db) return;
+      const now = new Date().toISOString(); let processedValue = value;
+      if (field === 'prio') { processedValue = parseInt(value, 10); if (isNaN(processedValue)) processedValue = 0; }
+      else if (field === 'datum_ziel') { processedValue = value ? value : null; }
+      db.run(`UPDATE tasks SET ${field} = ?, datum_geaendert = ? WHERE id = ?;`, [processedValue, now, id]);
+      hasChanges = true; refreshTable();
+    }
+
+    const hideDoneCheckbox = document.getElementById('hide-done-checkbox');
+    if (hideDoneCheckbox) hideDoneCheckbox.addEventListener('change', refreshTable);
+
+    function setupNewTaskPrioritySlider() {
+        const slider = document.getElementById('new_task_prio_slider');
+        const valueDisplay = document.getElementById('new_task_prio_value');
+        const hiddenInput = document.getElementById('prio');
+        if (slider && valueDisplay && hiddenInput) {
+            updateSliderAppearance(slider);
+            slider.addEventListener('input', () => { valueDisplay.textContent = slider.value; updateSliderAppearance(slider); });
+            slider.addEventListener('change', () => { hiddenInput.value = slider.value; });
+        }
+    }
+    if (SQL) setupNewTaskPrioritySlider();
+
+  </script>
+</body>
+</html>
