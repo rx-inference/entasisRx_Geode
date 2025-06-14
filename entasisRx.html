@@ -20,7 +20,8 @@
       box-sizing: border-box;
     }
     table {
-      width: 100%;
+      width: 100%; /* Re-add 100% width for responsiveness */
+      table-layout: fixed; /* Crucial for independent column resizing */
       border-collapse: collapse;
       margin-bottom: 20px;
     }
@@ -31,6 +32,24 @@
       height: 36px;
       box-sizing: border-box;
       vertical-align: middle;
+      overflow: hidden; /* Prevent content from overflowing during resize */
+      position: relative; /* Needed for positioning resize handles */
+    }
+    .resizable {
+      position: relative;
+    }
+    .resize-handle {
+      position: absolute;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.1); /* Visual cue for the handle */
+      width: 5px; /* Width of the draggable area */
+      cursor: col-resize;
+      z-index: 1; /* Ensure handle is above other content */
+    }
+    .resize-handle:hover {
+      background: rgba(0, 0, 0, 0.3);
     }
     #input-row td {
       padding: 0;
@@ -212,15 +231,15 @@
     <table id="tasks-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>TASK</th>
-          <th>PRIO</th>
-          <th>DATE MODIFIED</th>
-          <th>DATE DONE</th>
-          <th>DATE DUE</th>
-          <th>DATE CREATED</th>
-          <th>STATE</th>
-          <th>ACTIONS</th>
+          <th class="resizable" style="width: 5%;">ID<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 25%;">TASK<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 10%;">PRIO<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 15%;">DATE MODIFIED<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 15%;">DATE DONE<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 10%;">DATE DUE<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 10%;">DATE CREATED<div class="resize-handle"></div></th>
+          <th class="resizable" style="width: 5%;">STATE<div class="resize-handle"></div></th>
+          <th style="width: 5%;">ACTIONS</th>
         </tr>
         <tr id="input-row">
           <td></td> <td><input type="text" id="aufgabe" required placeholder="New task description" /></td>
@@ -702,6 +721,100 @@
         }
     }
     if (SQL) setupNewTaskPrioritySlider();
+
+    // === COLUMN RESIZING ===
+    function setupColumnResizing() {
+      const table = document.getElementById('tasks-table');
+      const headers = table.querySelectorAll('th.resizable');
+      let thBeingResized;
+      let startX;
+      let colIndex;
+      let startCurrentPct;
+      let startNextPct;
+
+      headers.forEach((header, index) => {
+        const handle = header.querySelector('.resize-handle');
+        if (handle) {
+          handle.addEventListener('mousedown', (e) => {
+            thBeingResized = header;
+            startX = e.clientX;
+            colIndex = index;
+            
+            // Get initial percentages at drag start
+            const tableWidth = table.offsetWidth;
+            startCurrentPct = (thBeingResized.offsetWidth / tableWidth) * 100;
+            const nextTh = headers[colIndex + 1];
+            startNextPct = nextTh ? (nextTh.offsetWidth / tableWidth) * 100 : 0;
+
+            document.addEventListener('mousemove', doDrag);
+            document.addEventListener('mouseup', stopDrag);
+            table.style.userSelect = 'none'; // Prevent text selection during drag
+            table.style.cursor = 'col-resize'; // Change cursor globally
+          });
+        }
+      });
+
+      function doDrag(e) {
+        if (thBeingResized) {
+          const currentTh = thBeingResized;
+          const nextTh = headers[colIndex + 1];
+          
+          // Get table width for percentage calculation
+          const tableWidth = table.offsetWidth;
+          
+          // Calculate delta as percentage of table width
+          const deltaPct = ((e.clientX - startX) / tableWidth) * 100;
+          
+          // Calculate new percentages based on initial values
+          const newCurrentPct = startCurrentPct + deltaPct;
+          const newNextPct = startNextPct - deltaPct;
+          
+          // Ensure minimum width constraints (2%)
+          const minPct = 2;
+          if (newCurrentPct < minPct || (nextTh && newNextPct < minPct)) {
+            return; // Prevent resizing if it goes below minimum
+          }
+          
+          // Apply percentage widths
+          currentTh.style.width = newCurrentPct + '%';
+          if (nextTh) {
+            nextTh.style.width = newNextPct + '%';
+          }
+          
+          // Apply percentage widths to all cells in the current and next column
+          const rows = table.querySelectorAll('tr');
+          rows.forEach(row => {
+            const currentCell = row.children[colIndex];
+            if (currentCell) {
+              currentCell.style.width = newCurrentPct + '%';
+            }
+            if (nextTh) {
+              const nextCell = row.children[colIndex + 1];
+              if (nextCell) {
+                nextCell.style.width = newNextPct + '%';
+              }
+            }
+          });
+        }
+      }
+
+      function stopDrag() {
+        thBeingResized = undefined;
+        document.removeEventListener('mousemove', doDrag);
+        document.removeEventListener('mouseup', stopDrag);
+        table.style.userSelect = ''; // Restore user select
+        table.style.cursor = ''; // Restore cursor
+      }
+    }
+
+    // Call setupColumnResizing after the DOM is loaded and table is rendered
+    document.addEventListener('DOMContentLoaded', setupColumnResizing);
+    // Also call it after refreshTable in case the table content is re-rendered
+    const originalRefreshTable = refreshTable;
+    refreshTable = function() {
+        originalRefreshTable();
+        setupColumnResizing(); // Re-apply event listeners after table refresh
+    };
 
   </script>
 </body>
