@@ -10,7 +10,7 @@
     <img src="https://img.shields.io/badge/Prototype / Work in Progress-crimson" alt="prototype">
     <img src="https://img.shields.io/badge/Tech-HTML_/_JS_/_sql.js-blueviolet" alt="tech stack">
     <a href="https://github.com/rx-inference/fragmentsFx/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License"></a>
-    <a href="#"><img src="https://img.shields.io/badge/Version-v0.1.0-brightgreen" alt="Version"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Version-v0.3.1-brightgreen" alt="Version"></a>
   </p>
 
 
