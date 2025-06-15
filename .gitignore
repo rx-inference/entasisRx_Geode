@@ -51,3 +51,6 @@ dist/
 build/
 *.exe
 *.msi 
+
+# === PROTOTYPING ===
+extracted_components/
