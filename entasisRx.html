@@ -11,6 +11,51 @@
       margin: 0;
       padding: 20px;
       font-family: 'Rubik', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #fff;
+      color: #000;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    body.dark-mode {
+      background-color: #171117;
+      color: #fff;
+    }
+    body.dark-mode #container {
+      outline-color: #fff;
+      box-shadow: 0 0 5px rgba(255,255,255,0.1);
+    }
+    body.dark-mode table,
+    body.dark-mode th,
+    body.dark-mode td {
+      border-color: #fff;
+    }
+    body.dark-mode .dropdown-content {
+      background-color: #333;
+      box-shadow: 0 0 5px rgba(255,255,255,0.1);
+      color: #eee;
+    }
+    body.dark-mode .dropdown-content div {
+      color: #eee;
+    }
+    body.dark-mode .dropdown-content div:hover {
+      background-color: #444;
+      color: #fff;
+    }
+    body.dark-mode .modal-content {
+      background: #333;
+      border-color: #444;
+      color: #eee;
+    }
+    body.dark-mode input,
+    body.dark-mode select {
+        color: #fff;
+    }
+    body.dark-mode input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+    }
+    body.dark-mode .dropdown > button,
+    body.dark-mode #add-task-btn {
+        background-color: #fff;
+        color: #000;
     }
     #container {
       width: 100%;
@@ -213,18 +258,25 @@
 </head>
 <body>
   <div id="container">
-    <div class="dropdown">
-      <button>DATABASE</button>
-      <div class="dropdown-content">
-        <div id="new-db">NEW</div>
-        <div id="load-db">LOAD</div>
-        <div id="export-db">BACKUP</div>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <div class="dropdown">
+        <button>DATABASE</button>
+        <div class="dropdown-content">
+          <div id="new-db">NEW</div>
+          <div id="load-db">LOAD</div>
+          <div id="export-db">BACKUP</div>
+        </div>
       </div>
-    </div>
-    <div style="float:right; margin-bottom:10px;">
-      <label style="font-size:0.95rem; user-select:none; cursor:pointer; display:inline-flex; align-items:center;">
-        <input type="checkbox" id="hide-done-checkbox" style="vertical-align:middle; margin-right:4px;" /> HIDE DONE
-      </label>
+      
+      <div style="display: flex; align-items: center;">
+        <label style="font-size:0.95rem; user-select:none; cursor:pointer; display:inline-flex; align-items:center; margin-right: 15px;">
+          <input type="checkbox" id="hide-done-checkbox" style="vertical-align:middle; margin-right:4px;" /> HIDE DONE
+        </label>
+        <button id="dark-mode-toggle" style="width:30px; height:30px; padding:0; display:flex; align-items:center; justify-content:center;">
+          <svg id="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-moon-icon lucide-moon"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+          <svg id="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sun-icon lucide-sun" style="display:none;"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+        </button>
+      </div>
     </div>
     <input type="file" id="db-file" accept=".sqlite,.db" style="display:none;" />
 
@@ -289,6 +341,27 @@
 
   <script>
     let db;
+    let isDarkMode = false;
+
+    document.getElementById('dark-mode-toggle').addEventListener('click', function() {
+      isDarkMode = !isDarkMode;
+      document.body.classList.toggle('dark-mode', isDarkMode);
+      
+      const moonIcon = document.getElementById('moon-icon');
+      const sunIcon = document.getElementById('sun-icon');
+      
+      if (isDarkMode) {
+        moonIcon.style.display = 'none';
+        sunIcon.style.display = 'block';
+        this.style.backgroundColor = '#fff';
+        this.style.color = '#000';
+      } else {
+        moonIcon.style.display = 'block';
+        sunIcon.style.display = 'none';
+        this.style.backgroundColor = '#000';
+        this.style.color = '#fff';
+      }
+    });
     let SQL;
     let hasChanges = false;
     let currentOnConfirm = null;
