@@ -6,6 +6,12 @@ this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0.htm
 
 ## PROTOTYPING
 
+### 2025-06-16
+
+### v0.3.4
+
+- doc: included lucide icon license file 'LICENSE_lucide'. ;;;
+
 ### 2025-06-15
 
 ### v0.3.3
@@ -23,7 +29,7 @@ this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0.htm
 
 ### v0.2.1
 
-- mod: mod: changed slider handle design: ellipse ---> square. ;;;
+- mod: changed slider handle design: ellipse ---> square. ;;;
 
 ### 2025-06-14
 
