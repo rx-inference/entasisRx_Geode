@@ -8,8 +8,9 @@ this project adheres to [semantic versioning](https://semver.org/spec/v2.0.0.htm
 
 ### 2025-06-16
 
-### v0.3.4
+### v0.3.5
 
+- doc: added color palette document: 'PALETTE.md' ;;;
 - doc: included lucide icon license file 'LICENSE_lucide'. ;;;
 
 ### 2025-06-15
