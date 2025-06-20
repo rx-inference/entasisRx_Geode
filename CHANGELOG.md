@@ -10,6 +10,8 @@ This document tracks all significant changes made to the project. The project is
 
 | Date............. | ID.................... | Version....... | Type | Description | Remarks | Stage |
 |------------|-------|-------------|-----|----------------|---------|-------|
+| 2025-06-20 | 0014 | v0.3.7 | doc | updated .gitignore to exclude 'PROJECT.md'. | | PROTOTYPING |
+| 2025-06-20 | 0014 | v0.3.7 | doc | moved tasks from internal database file to newly added 'PROJECT.md'. | | PROTOTYPING |
 | 2025-06-20 | 0014 | v0.3.6 | doc | converted 'CHANGELOG.md' to new standardized format. | | PROTOTYPING |
 | 2025-06-17 | 0013 | not tracked | doc | added general issue template. | | PROTOTYPING |
 | 2025-06-16 | 0012 | v0.3.5 | doc | added color palette document: 'PALETTE.md' | | PROTOTYPING |

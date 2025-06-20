@@ -52,5 +52,4 @@ build/
 *.exe
 *.msi 
 
-# === PROTOTYPING ===
-extracted_components/
+# === Rx-ecosystéme ===
